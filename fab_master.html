@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FAB MASTER — 반도체 8대 공정 게임</title>
+<style>
+:root{
+  --bg:#070b16;--panel:#0f1729;--panel2:#162038;--line:#24314f;
+  --cyan:#3ee6ff;--mag:#ff4fd8;--yel:#ffd54a;--grn:#4ae08a;--red:#ff5c6c;
+  --txt:#e8eefc;--dim:#8a97b8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:radial-gradient(1200px 600px at 50% -200px,#15254a 0%,var(--bg) 60%);
+  color:var(--txt);font-family:-apple-system,"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;
+  display:flex;justify-content:center;min-height:100%;
+  -webkit-tap-highlight-color:transparent;overflow-x:hidden;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);z-index:9}
+#app{width:100%;max-width:480px;padding:16px 14px 40px;position:relative}
+.screen{display:none;animation:fade .35s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1{font-size:34px;letter-spacing:2px;text-align:center;
+  background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 12px rgba(62,230,255,.45))}
+.sub{color:var(--dim);text-align:center;font-size:13px;margin-top:6px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;
+  box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:1px;
+  background:rgba(62,230,255,.12);color:var(--cyan);border:1px solid rgba(62,230,255,.4)}
+h2{font-size:22px;margin:8px 0 4px}
+h3{font-size:16px;margin-bottom:8px;color:var(--yel)}
+p{line-height:1.6;font-size:14px}
+ul.learn{list-style:none;margin-top:10px}
+ul.learn li{padding:8px 10px;margin:6px 0;background:var(--panel2);border-left:3px solid var(--cyan);border-radius:6px;font-size:13.5px;line-height:1.55}
+ul.learn li b{color:var(--cyan)}
+.inst{background:rgba(255,213,74,.08);border:1px dashed rgba(255,213,74,.5);border-radius:8px;padding:8px 10px;font-size:13px;margin:8px 0 10px;color:#ffe89a}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:700;font-size:16px;
+  padding:14px;width:100%;color:#061018;background:linear-gradient(135deg,var(--cyan),#3aa9ff);
+  box-shadow:0 6px 0 #1c6a8a,0 10px 24px rgba(62,230,255,.25);transition:transform .08s;margin-top:12px}
+button:active{transform:translateY(4px);box-shadow:0 2px 0 #1c6a8a}
+button.ghost{background:var(--panel2);color:var(--txt);box-shadow:0 4px 0 #0b1224}
+button.opt{background:var(--panel2);color:var(--txt);box-shadow:0 4px 0 #0b1224;font-size:15px;text-align:left;padding:13px 14px;margin-top:8px}
+button.opt.ok{background:linear-gradient(135deg,#1d7a4a,#2fbf72);color:#fff}
+button.opt.bad{background:linear-gradient(135deg,#8a2032,#d63c52);color:#fff}
+button.opt.dis{pointer-events:none;opacity:.7}
+input{width:100%;padding:14px;border-radius:10px;border:1px solid var(--line);background:#0a1022;color:var(--txt);font-size:18px;text-align:center;font-family:inherit;margin-top:12px;outline:none}
+input:focus{border-color:var(--cyan)}
+canvas{display:block;width:100%;height:auto;border-radius:10px;background:#0a1022;border:1px solid var(--line);touch-action:none;user-select:none}
+.bar{height:14px;background:#0a1022;border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative;margin-top:8px}
+.bar>i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--mag))}
+.bar>s{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--yel)}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.stage-map{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.stage-map div{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;font-size:11px;color:var(--dim)}
+.stage-map div em{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
+.stage-map div.done{border-color:var(--grn);color:var(--txt)}
+.stage-map div.cur{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 10px rgba(62,230,255,.4)}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim);margin-bottom:6px}
+.top b{color:var(--yel)}
+.score-big{font-size:64px;text-align:center;font-weight:900;color:var(--cyan);text-shadow:0 0 20px rgba(62,230,255,.5);line-height:1.1}
+.stars{text-align:center;font-size:26px;letter-spacing:4px;color:var(--yel)}
+.nick{font-size:36px;font-weight:900;text-align:center;
+  background:linear-gradient(90deg,var(--yel),var(--mag));-webkit-background-clip:text;color:transparent;word-break:break-all}
+.grade{display:inline-block;font-size:44px;font-weight:900;padding:4px 20px;border-radius:12px;border:2px solid var(--yel);color:var(--yel)}
+.srow{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+.srow span:first-child{width:96px;flex:none}
+.srow .bar{flex:1;margin:0}
+.srow span:last-child{width:38px;text-align:right;font-weight:700}
+.rank{list-style:none;margin-top:8px}
+.rank li{display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--line);font-size:14px}
+.rank li.me{color:var(--yel);font-weight:700}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.tile{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 8px;text-align:center;font-weight:700;font-size:14px;cursor:pointer}
+.tile.picked{background:#153a2a;border-color:var(--grn);color:var(--grn)}
+.tile.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.match{display:flex;align-items:center;gap:6px;margin:8px 0;flex-wrap:wrap}
+.match .q{flex:1 1 100%;font-size:13.5px;background:var(--panel2);padding:8px 10px;border-radius:8px}
+.match .m{flex:1;padding:10px 4px;text-align:center;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#0a1022}
+.match .m.sel{border-color:var(--cyan);color:var(--cyan)}
+.match .m.ok{border-color:var(--grn);color:var(--grn)}
+.match .m.bad{border-color:var(--red);color:var(--red)}
+.tip{background:var(--panel2);border-radius:8px;padding:10px;font-size:13px;line-height:1.55;margin-top:10px;border-left:3px solid var(--yel)}
+.small{font-size:12px;color:var(--dim);text-align:center;margin-top:10px}
+.flow{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;margin-top:12px;font-size:11px;color:var(--dim)}
+.flow span{background:var(--panel2);padding:4px 7px;border-radius:6px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- START -->
+<section id="s-start" class="screen on">
+  <div style="text-align:center;font-size:56px;margin-top:10px">🏭</div>
+  <h1>FAB MASTER</h1>
+  <div class="sub">반도체 8대 공정을 직접 운전하며 배우는 FAB 시뮬레이션 게임</div>
+  <div class="panel">
+    <p>당신은 신입 공정 엔지니어. 웨이퍼 한 장이 <b>잉곳에서 완제품 칩</b>이 되기까지 8개 공정을 모두 통과시켜야 합니다. 각 공정의 미니게임 결과가 <b>수율(Yield)</b>로 합산됩니다.</p>
+    <div class="flow">
+      <span>① 웨이퍼</span><span>② 산화</span><span>③ 포토</span><span>④ 식각</span>
+      <span>⑤ 박막·이온주입</span><span>⑥ 금속배선</span><span>⑦ EDS</span><span>⑧ 패키징</span>
+    </div>
+    <input id="nick" maxlength="12" placeholder="엔지니어 닉네임 입력">
+    <button onclick="startGame()">🚀 FAB 가동 시작</button>
+  </div>
+  <div class="small">각 공정 시작 전 학습 카드를 꼭 읽어보세요. 미니게임 규칙에 답이 숨어 있습니다.</div>
+</section>
+
+<!-- LEARN -->
+<section id="s-learn" class="screen">
+  <div class="top"><span id="l-prog"></span><span>누적 수율 <b id="l-yield">-</b></span></div>
+  <div class="stage-map" id="l-map"></div>
+  <div class="panel">
+    <span class="badge" id="l-badge"></span>
+    <h2 id="l-title"></h2>
+    <p id="l-desc" style="color:var(--dim)"></p>
+    <ul class="learn" id="l-list"></ul>
+    <button onclick="beginPlay()">▶ 공정 투입</button>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="s-game" class="screen">
+  <div class="top"><span id="g-prog"></span><span id="g-timer"></span></div>
+  <div class="panel">
+    <span class="badge" id="g-badge"></span>
+    <h2 id="g-title"></h2>
+    <div id="g-box"></div>
+  </div>
+</section>
+
+<!-- FEEDBACK -->
+<section id="s-fb" class="screen">
+  <div class="panel" style="text-align:center">
+    <span class="badge" id="f-badge"></span>
+    <h2 id="f-title"></h2>
+    <div class="score-big" id="f-score"></div>
+    <div class="stars" id="f-stars"></div>
+    <p id="f-msg" style="margin-top:8px"></p>
+    <div class="tip" id="f-tip" style="text-align:left"></div>
+    <button onclick="nextStage()" id="f-next">다음 공정으로 →</button>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section id="s-result" class="screen">
+  <div class="panel" style="text-align:center">
+    <div class="badge">FAB OUT 완료</div>
+    <div class="nick" id="r-nick" style="margin-top:8px"></div>
+    <p style="color:var(--dim);margin-top:4px">엔지니어의 최종 웨이퍼 수율</p>
+    <div class="score-big" id="r-yield"></div>
+    <div style="margin:10px 0"><span class="grade" id="r-grade"></span></div>
+    <p id="r-msg"></p>
+  </div>
+  <div class="panel">
+    <h3>공정별 결과</h3>
+    <div id="r-stages"></div>
+  </div>
+  <div class="panel" id="r-review-panel">
+    <h3>📚 복습이 필요한 공정</h3>
+    <div id="r-review"></div>
+  </div>
+  <div class="panel">
+    <h3>🏆 FAB 엔지니어 순위</h3>
+    <ol class="rank" id="r-rank"></ol>
+  </div>
+  <button onclick="location.reload()">🔁 다시 도전</button>
+</section>
+
+</div>
+
+<script>
+/* ============ 공통 ============ */
+const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+let nick='',cur=0,scores=[],timerInt=null;
+
+/* 객관식 질문: Promise<점수(0|100)> */
+function askQ(box,q){
+  return new Promise(res=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<div class="inst">❓ ${q.q}</div>`;
+    q.opts.forEach((o,i)=>{
+      const b=document.createElement('button');b.className='opt';b.textContent=o;
+      b.onclick=()=>{
+        wrap.querySelectorAll('.opt').forEach((x,j)=>{x.classList.add('dis');if(j===q.a)x.classList.add('ok');else if(j===i)x.classList.add('bad');});
+        const ex=document.createElement('div');ex.className='tip';ex.innerHTML=(i===q.a?'✅ 정답! ':'❌ 오답. ')+q.ex;wrap.appendChild(ex);
+        const nb=document.createElement('button');nb.textContent='계속 →';nb.onclick=()=>{wrap.remove();res(i===q.a?100:0);};wrap.appendChild(nb);
+      };
+      wrap.appendChild(b);
+    });
+    box.appendChild(wrap);
+  });
+}
+
+/* 타이밍 게임: 값이 자라고 목표 지점에서 멈추기. Promise<점수> */
+function timingGame(box,o){
+  return new Promise(res=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<div class="inst">⏱ ${o.inst}</div>
+      <canvas id="tg" width="360" height="200"></canvas>
+      <div class="bar" id="tgbar"><i></i><s style="left:${o.target/o.max*100}%"></s></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-top:4px"><span>0</span><span>목표 ${o.target}${o.unit}</span><span>${o.max}${o.unit}</span></div>
+      <button id="tgbtn">${o.btn||'⏹ 중단!'}</button>`;
+    box.appendChild(wrap);
+    const cv=wrap.querySelector('#tg'),ctx=cv.getContext('2d'),fill=wrap.querySelector('#tgbar i');
+    let v=0,t0=performance.now(),run=true,raf;
+    function loop(now){
+      if(!run)return;
+      const t=(now-t0)/1000;v=clamp(o.fn(t),0,o.max);
+      fill.style.width=(v/o.max*100)+'%';
+      o.draw(ctx,v,cv);
+      if(v>=o.max){stop();return;}
+      raf=requestAnimationFrame(loop);
+    }
+    function stop(){
+      run=false;cancelAnimationFrame(raf);
+      const diff=Math.abs(v-o.target);let sc=Math.round(clamp(100-diff*o.pen,0,100));
+      if(v>o.target&&o.overPen)sc=Math.round(clamp(sc-o.overPen,0,100));
+      const t=document.createElement('div');t.className='tip';
+      t.innerHTML=`결과: <b>${v.toFixed(0)}${o.unit}</b> (목표 ${o.target}${o.unit}) → ${sc}점<br>${o.fb(v,o.target)}`;
+      wrap.querySelector('#tgbtn').remove();wrap.appendChild(t);
+      const nb=document.createElement('button');nb.textContent='계속 →';nb.onclick=()=>{wrap.remove();res(sc);};wrap.appendChild(nb);
+    }
+    wrap.querySelector('#tgbtn').onclick=stop;
+    raf=requestAnimationFrame(loop);
+  });
+}
+/* 단면 그리기 헬퍼 */
+function drawSection(ctx,cv,layers,label){
+  ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='#0a1022';ctx.fillRect(0,0,cv.width,cv.height);
+  let y=cv.height;
+  layers.forEach(l=>{y-=l.h;ctx.fillStyle=l.c;ctx.fillRect(40,y,cv.width-80,l.h);
+    if(l.t&&l.h>14){ctx.fillStyle='#fff';ctx.font='12px sans-serif';ctx.fillText(l.t,48,y+l.h/2+4);}});
+  ctx.fillStyle='#ffd54a';ctx.font='bold 13px sans-serif';ctx.fillText(label,10,18);
+}
+function matchGame(box,o){
+  return new Promise(res=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<div class="inst">🧩 ${o.inst}</div>`;
+    const ans=new Array(o.items.length).fill(-1);
+    o.items.forEach((it,i)=>{
+      const m=document.createElement('div');m.className='match';
+      m.innerHTML=`<div class="q">${it.q}</div>`;
+      o.methods.forEach((mm,j)=>{const d=document.createElement('div');d.className='m';d.textContent=mm;
+        d.onclick=()=>{if(m.dataset.lock)return;ans[i]=j;m.querySelectorAll('.m').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');};
+        m.appendChild(d);});
+      wrap.appendChild(m);
+    });
+    const b=document.createElement('button');b.textContent='✅ 제출';
+    b.onclick=()=>{
+      if(ans.includes(-1)){alert('모든 항목을 선택하세요');return;}
+      let ok=0;
+      wrap.querySelectorAll('.match').forEach((m,i)=>{m.dataset.lock=1;const ms=m.querySelectorAll('.m');
+        ms[o.items[i].a].classList.add('ok');if(ans[i]===o.items[i].a)ok++;else ms[ans[i]].classList.add('bad');});
+      const sc=Math.round(ok/o.items.length*100);
+      const t=document.createElement('div');t.className='tip';t.innerHTML=`${ok}/${o.items.length} 정답 → ${sc}점<br>${o.ex}`;
+      b.remove();wrap.appendChild(t);
+      const nb=document.createElement('button');nb.textContent='계속 →';nb.onclick=()=>{wrap.remove();res(sc);};wrap.appendChild(nb);
+    };
+    wrap.appendChild(b);box.appendChild(wrap);
+  });
+}
+
+/* ============ 8대 공정 정의 ============ */
+const STAGES=[
+{ icon:'🔮',name:'웨이퍼 제조',en:'WAFER',
+  desc:'모래(규소)에서 시작해 반도체의 기판이 되는 얇고 둥근 원판을 만드는 공정',
+  learn:['<b>초크랄스키(CZ)법</b>: 고순도 실리콘을 1,400℃ 이상에서 녹인 뒤, 씨앗 결정을 담가 천천히 회전하며 끌어올려 원기둥 모양 <b>잉곳(Ingot)</b>을 키웁니다.',
+         '끌어올리는 <b>인상 속도</b>가 일정해야 잉곳 지름이 고르게 나옵니다. 너무 빠르면 가늘어지고, 느리면 굵어집니다.',
+         '잉곳을 다이아몬드 톱으로 얇게 <b>슬라이싱</b> → 표면을 거울처럼 <b>연마(Polishing)</b> → 웨이퍼 완성. 지름이 클수록(300mm) 한 장에서 더 많은 칩이 나옵니다.'],
+  tip:'잉곳 성장의 핵심은 <b>일정한 인상 속도와 회전</b>입니다. 지름이 울퉁불퉁하면 웨이퍼 슬라이싱 시 손실이 커집니다.',
+  play:playWafer },
+{ icon:'🔥',name:'산화',en:'OXIDATION',
+  desc:'웨이퍼 표면에 얇은 산화막(SiO₂)을 입혀 보호막·절연막으로 쓰는 공정',
+  learn:['웨이퍼를 800~1,200℃ 고온로에 넣고 산소나 수증기를 흘려 표면을 <b>이산화규소(SiO₂)</b>로 바꿉니다.',
+         '<b>건식 산화</b>(O₂): 느리지만 막이 <b>치밀·고품질</b> → 얇은 <b>게이트 산화막</b>에 사용.',
+         '<b>습식 산화</b>(H₂O): 빠르지만 밀도가 낮음 → 두꺼운 <b>필드(소자 분리) 산화막</b>에 사용.',
+         '산화막은 시간이 갈수록 성장 속도가 느려집니다(딜-그로브 모델). 두께 제어가 곧 소자 특성입니다.'],
+  tip:'<b>얇고 정밀 → 건식, 두껍고 빠르게 → 습식.</b> 게이트 산화막 두께 오차는 트랜지스터 문턱전압을 바꿉니다.',
+  play:playOxide },
+{ icon:'💡',name:'포토',en:'PHOTO',
+  desc:'빛으로 회로 패턴을 웨이퍼에 새기는, 8대 공정 중 가장 미세하고 비싼 공정',
+  learn:['순서: <b>감광액(PR) 도포 → 정렬(Align) → 노광(Exposure) → 현상(Develop)</b>. 사진 인화와 원리가 같습니다.',
+         '<b>마스크(레티클)</b>의 회로 패턴을 빛으로 웨이퍼 위 감광액에 옮깁니다. 파장이 짧을수록 미세 패턴 가능: KrF(248nm) → ArF(193nm) → <b>EUV(13.5nm)</b>.',
+         '이전 층과 새 층의 패턴이 정확히 겹쳐야 합니다. 이 <b>정렬 오차(Overlay)</b>는 수 nm 수준으로 관리됩니다.',
+         '노광이 부족하면 패턴이 안 뚫리고, 과하면 선폭이 무너집니다.'],
+  tip:'포토는 <b>도포→노광→현상</b>. 정렬(Overlay)이 틀어지면 이후 모든 층이 어긋나 칩 전체가 불량이 됩니다.',
+  play:playPhoto },
+{ icon:'⚡',name:'식각',en:'ETCH',
+  desc:'포토로 남긴 감광액 패턴을 따라 필요 없는 부분을 깎아내는 공정',
+  learn:['감광액이 없는 부분만 선택적으로 깎아 회로 모양을 실제로 만듭니다.',
+         '<b>습식 식각</b>: 화학 용액 사용. 빠르고 싸지만 모든 방향으로 깎여(등방성) 패턴 옆이 파입니다.',
+         '<b>건식(플라즈마) 식각</b>: 이온화된 가스로 수직으로 깎음(<b>이방성</b>). 미세 패턴 필수. 현재 대부분 건식.',
+         '목표 깊이보다 더 깎으면(<b>과식각</b>) 아래층이 손상되고, 덜 깎으면 회로가 연결되지 않습니다.'],
+  tip:'<b>미세·수직 패턴은 건식(플라즈마) 식각.</b> 식각 종점(End Point)을 정확히 잡는 것이 수율의 열쇠입니다.',
+  play:playEtch },
+{ icon:'🧪',name:'박막 · 이온주입',en:'THIN FILM',
+  desc:'얇은 막을 쌓고(증착), 불순물을 심어(이온주입) 반도체에 전기적 성질을 부여',
+  learn:['<b>증착(Deposition)</b>: 1㎛ 이하의 얇은 막을 층층이 쌓습니다.',
+         '<b>CVD</b>(화학기상증착): 가스 반응으로 두꺼운 절연막·폴리실리콘 → 범용.',
+         '<b>PVD</b>(물리기상증착·스퍼터링): 금속 타깃을 때려 <b>금속막</b> 형성.',
+         '<b>ALD</b>(원자층증착): 한 층씩 원자 단위로 쌓아 <b>극박·초균일</b> 막(고유전 게이트 등).',
+         '<b>이온주입</b>: 불순물 이온을 가속해 웨이퍼에 박습니다. <b>인(P)·비소(As) → N형</b>, <b>붕소(B) → P형</b>. 주입량(Dose)이 전기 특성을 결정.'],
+  tip:'증착 방식은 막의 목적으로 정합니다. <b>두꺼운 절연막 CVD, 금속 PVD, 극박·균일 ALD</b>. 이온주입은 5족(N) / 3족(P)!',
+  play:playFilm },
+{ icon:'🔗',name:'금속 배선',en:'METAL',
+  desc:'수억 개 트랜지스터를 금속선으로 연결해 전기 신호가 흐르는 길을 만드는 공정',
+  learn:['소자 위에 여러 층(10층 이상)의 금속 배선을 쌓아 트랜지스터끼리 연결합니다.',
+         '과거엔 <b>알루미늄(Al)</b>, 지금은 저항이 낮고 신뢰성이 높은 <b>구리(Cu)</b>가 주류. 구리는 식각이 어려워 홈을 판 뒤 채우는 <b>다마신(Damascene)</b> 공법 사용.',
+         '<b>CMP</b>(화학적·기계적 연마): 채운 뒤 표면을 평탄하게 갈아냅니다. 덜 갈면 배선끼리 붙고(단락), 더 갈면 배선이 패입니다(디싱).',
+         '배선 사이의 절연막은 <b>Low-k</b> 물질로 신호 지연을 줄입니다.'],
+  tip:'<b>구리 + 다마신 + CMP</b>가 현대 배선의 3종 세트. CMP 종점은 정확히!',
+  play:playMetal },
+{ icon:'🔍',name:'EDS',en:'TEST',
+  desc:'Electrical Die Sorting — 웨이퍼 위 칩 하나하나에 전기 신호를 넣어 양품·불량을 가려내는 공정',
+  learn:['<b>프로브 카드</b>의 미세한 바늘을 웨이퍼 위 칩 패드에 접촉시켜 전기 특성을 검사합니다.',
+         '불량 칩에는 <b>잉크 마킹</b>(또는 전자 맵 기록)을 해 패키징에서 제외합니다.',
+         '<b>수율(Yield) = 양품 칩 수 ÷ 전체 칩 수</b>. 이 수치가 FAB 경쟁력의 핵심 지표입니다.',
+         '일부 불량은 <b>리페어</b>(여분 셀로 대체)로 살릴 수 있어 메모리 수율을 크게 높입니다.'],
+  tip:'EDS는 <b>웨이퍼 단계</b>의 전기 검사입니다. 불량을 놓치면 패키징 비용을 낭비하고, 양품을 불량 처리하면 수율이 떨어집니다.',
+  play:playEDS },
+{ icon:'📦',name:'패키징',en:'PACKAGE',
+  desc:'웨이퍼에서 칩을 잘라내어 보호하고 외부와 연결 단자를 붙여 완제품으로 만드는 공정',
+  learn:['순서: <b>백그라인딩</b>(웨이퍼 뒷면 얇게) → <b>다이싱</b>(칩 단위로 자름) → <b>다이 어태치</b>(기판에 붙임) → <b>와이어 본딩</b>(금선으로 연결) → <b>몰딩</b>(수지로 보호) → <b>마킹·최종 테스트</b>.',
+         '최근엔 와이어 대신 범프로 뒤집어 붙이는 <b>플립칩</b>, 칩을 수직으로 쌓는 <b>TSV/HBM</b> 등 첨단 패키징이 성능을 좌우합니다.',
+         '패키징 후 <b>최종 테스트(Final Test)</b>를 거쳐 출하됩니다.'],
+  tip:'패키징 순서: <b>얇게 → 자르고 → 붙이고 → 연결 → 감싸고 → 검사</b>. 순서를 바꾸면 칩이 깨집니다.',
+  play:playPack },
+];
+
+/* ============ 미니게임 구현 ============ */
+/* 1. 잉곳 인상 */
+function playWafer(box){
+  return new Promise(res=>{
+    box.innerHTML=`<div class="inst">🖐 화면을 <b>길게 누르면</b> 인상 속도가 올라가고, <b>떼면</b> 내려갑니다. 바늘을 10초 동안 초록 구간에 유지해 지름이 고른 잉곳을 키우세요!</div>
+      <canvas id="cz" width="360" height="330"></canvas><div class="bar"><i id="czt"></i></div>`;
+    const cv=$('cz'),ctx=cv.getContext('2d');
+    let speed=0,press=false,tIn=0,last=null,widths=[],DUR=10,done=false;
+    cv.addEventListener('pointerdown',e=>{press=true;e.preventDefault();});
+    window.addEventListener('pointerup',()=>press=false);
+    window.addEventListener('pointercancel',()=>press=false);
+    const LO=.42,HI=.62;
+    function draw(){
+      ctx.clearRect(0,0,360,330);ctx.fillStyle='#0a1022';ctx.fillRect(0,0,360,330);
+      // crucible
+      const g=ctx.createLinearGradient(0,220,0,330);g.addColorStop(0,'#ffb347');g.addColorStop(1,'#ff5c00');
+      ctx.fillStyle='#333c55';ctx.beginPath();ctx.moveTo(50,215);ctx.lineTo(250,215);ctx.lineTo(240,320);ctx.lineTo(60,320);ctx.closePath();ctx.fill();
+      ctx.fillStyle=g;ctx.fillRect(62,232,176,84);
+      ctx.fillStyle='#ffe9c4';ctx.font='11px sans-serif';ctx.fillText('용융 실리콘 1,420℃',95,300);
+      // rod
+      ctx.fillStyle='#9aa7c7';ctx.fillRect(146,0,8,30);
+      // ingot from top (grows downward visually as pulled length increases)
+      let y=30;
+      widths.forEach(w=>{const cx=150;ctx.fillStyle=w<28?'#5f7cc9':(w>44?'#4d5f9e':'#7aa0ff');ctx.fillRect(cx-w/2,y,w,2);y+=2;});
+      ctx.fillStyle='#e8eefc';ctx.font='bold 12px sans-serif';ctx.fillText('잉곳 길이 '+(widths.length*2)+'mm',60,20);
+      // gauge
+      ctx.fillStyle='#162038';ctx.fillRect(290,30,40,260);
+      ctx.fillStyle='rgba(74,224,138,.35)';ctx.fillRect(290,30+(1-HI)*260,40,(HI-LO)*260);
+      ctx.fillStyle=(speed>=LO&&speed<=HI)?'#4ae08a':'#ff5c6c';ctx.fillRect(285,30+(1-speed)*260-3,50,6);
+      ctx.fillStyle='#8a97b8';ctx.font='11px sans-serif';ctx.fillText('인상속도',288,305);ctx.fillText('빠름',300,25);ctx.fillText('느림',300,300);
+      ctx.fillStyle=press?'#3ee6ff':'#8a97b8';ctx.font='bold 13px sans-serif';ctx.fillText(press?'▲ 당기는 중':'▼ 놓음',180,60);
+    }
+    function loop(now){
+      if(done)return;if(!last)last=now;const dt=(now-last)/1000;last=now;
+      speed=clamp(speed+(press?.9:-.7)*dt,0,1);
+      const inz=speed>=LO&&speed<=HI;if(inz)tIn+=dt;
+      if(Math.random()<dt*25){const w=36-(speed-.52)*80+rnd(-1,1);widths.push(clamp(w,10,60));if(widths.length>90)widths.length=90;}
+      const el=(now-t0)/1000;$('czt').style.width=(el/DUR*100)+'%';
+      draw();
+      if(el>=DUR){done=true;const sc=Math.round(clamp(tIn/DUR*100*1.15,0,100));
+        const t=document.createElement('div');t.className='tip';t.innerHTML=`초록 구간 유지 ${tIn.toFixed(1)}초 / ${DUR}초 → ${sc}점<br>${sc>=80?'지름이 고른 우량 잉곳! 슬라이싱 손실이 적습니다.':'지름이 들쭉날쭉해 슬라이싱 시 버리는 부분이 많습니다.'}`;box.appendChild(t);
+        const nb=document.createElement('button');nb.textContent='계속 →';nb.onclick=()=>res(sc);box.appendChild(nb);return;}
+      requestAnimationFrame(loop);
+    }
+    const t0=performance.now();requestAnimationFrame(loop);
+  });
+}
+/* 2. 산화 */
+async function playOxide(box){
+  const a=await askQ(box,{q:'트랜지스터의 <b>게이트 산화막</b>(수 nm, 매우 얇고 치밀해야 함)을 만들 때 적합한 방식은?',
+    opts:['건식 산화 (O₂)','습식 산화 (H₂O)'],a:0,ex:'게이트 산화막처럼 얇고 품질이 중요한 막은 느리지만 치밀한 <b>건식 산화</b>를 씁니다.'});
+  const b=await askQ(box,{q:'소자와 소자를 분리하는 <b>두꺼운 필드 산화막</b>(수백 nm)을 빨리 만들려면?',
+    opts:['건식 산화 (O₂)','습식 산화 (H₂O)'],a:1,ex:'두꺼운 막을 빠르게 키우려면 성장 속도가 훨씬 빠른 <b>습식 산화</b>가 유리합니다.'});
+  const c=await timingGame(box,{inst:'고온로에서 산화막이 자라고 있습니다. 시간이 갈수록 성장이 <b>느려지는</b> 점을 감안해 정확히 <b>100nm</b>에서 중단하세요!',
+    target:100,max:160,unit:'nm',pen:2.2,btn:'⏹ 산화 중단',
+    fn:t=>Math.sqrt(t)*42,
+    draw:(ctx,v,cv)=>drawSection(ctx,cv,[{h:90,c:'#3b4c7a',t:'Si 웨이퍼'},{h:v*0.7,c:'#6fd3ff',t:'SiO₂ '+v.toFixed(0)+'nm'}],'🔥 산화로 1,000℃'),
+    fb:(v,t)=>v>t+10?'과산화! 게이트 문턱전압이 올라가 소자가 느려집니다.':v<t-10?'산화 부족! 절연이 약해 누설전류가 생깁니다.':'적정 두께. 훌륭한 게이트 산화막입니다.'});
+  return Math.round((a+b+c)/3);
+}
+/* 3. 포토 */
+async function playPhoto(box){
+  const a=await askQ(box,{q:'포토 공정의 올바른 순서는?',
+    opts:['노광 → 현상 → 감광액 도포','감광액 도포 → 노광 → 현상','현상 → 감광액 도포 → 노광'],a:1,
+    ex:'사진 인화와 같습니다. <b>감광액을 바르고(도포) → 빛을 쬐고(노광) → 패턴을 드러냅니다(현상).</b>'});
+  const b=await new Promise(res=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<div class="inst">🎯 마스크(분홍)를 <b>드래그</b>해 웨이퍼의 정렬 마크(+)와 정확히 겹친 뒤 노광하세요. 오차 1px = 1nm 오버레이!</div>
+      <canvas id="ph" width="360" height="300"></canvas><button id="phb">💡 노광 (Exposure)</button>`;
+    box.appendChild(wrap);
+    const cv=wrap.querySelector('#ph'),ctx=cv.getContext('2d');
+    let mx=rnd(-60,60),my=rnd(-50,50),drag=false,lx,ly;
+    const marks=[[70,70],[290,70],[70,230],[290,230]];
+    function cross(x,y,c){ctx.strokeStyle=c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-12,y);ctx.lineTo(x+12,y);ctx.moveTo(x,y-12);ctx.lineTo(x,y+12);ctx.stroke();}
+    function draw(){
+      ctx.clearRect(0,0,360,300);ctx.fillStyle='#0a1022';ctx.fillRect(0,0,360,300);
+      ctx.fillStyle='#3b4c7a';ctx.beginPath();ctx.arc(180,150,140,0,7);ctx.fill();
+      ctx.strokeStyle='#5f7cc9';for(let i=0;i<5;i++)for(let j=0;j<5;j++)ctx.strokeRect(80+i*40,50+j*40,40,40);
+      marks.forEach(m=>cross(m[0],m[1],'#3ee6ff'));
+      ctx.save();ctx.translate(mx,my);ctx.fillStyle='rgba(255,79,216,.22)';ctx.fillRect(40,40,280,220);
+      ctx.strokeStyle='#ff4fd8';ctx.lineWidth=2;ctx.strokeRect(40,40,280,220);
+      for(let i=0;i<5;i++)for(let j=0;j<5;j++){ctx.fillStyle='rgba(255,79,216,.5)';ctx.fillRect(90+i*40,60+j*40,20,20);}
+      marks.forEach(m=>cross(m[0],m[1],'#ff4fd8'));ctx.restore();
+      ctx.fillStyle='#ffd54a';ctx.font='bold 12px sans-serif';ctx.fillText('오버레이 오차 '+Math.hypot(mx,my).toFixed(1)+'nm',10,18);
+    }
+    const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*360/r.width,(e.clientY-r.top)*300/r.height];};
+    cv.addEventListener('pointerdown',e=>{drag=true;[lx,ly]=pos(e);cv.setPointerCapture(e.pointerId);});
+    cv.addEventListener('pointermove',e=>{if(!drag)return;const[x,y]=pos(e);mx+=x-lx;my+=y-ly;lx=x;ly=y;draw();});
+    cv.addEventListener('pointerup',()=>drag=false);
+    draw();
+    wrap.querySelector('#phb').onclick=()=>{
+      const d=Math.hypot(mx,my),sc=Math.round(clamp(100-d*4,0,100));
+      const t=document.createElement('div');t.className='tip';t.innerHTML=`오버레이 오차 <b>${d.toFixed(1)}nm</b> → ${sc}점<br>${d<5?'완벽한 정렬! 위아래 층이 정확히 연결됩니다.':d<15?'허용 범위 안쪽이지만 아슬아슬합니다.':'정렬 불량! 층간 연결이 어긋나 칩 전체가 불량이 됩니다.'}`;
+      wrap.querySelector('#phb').remove();wrap.appendChild(t);
+      const nb=document.createElement('button');nb.textContent='계속 →';nb.onclick=()=>{wrap.remove();res(sc);};wrap.appendChild(nb);
+    };
+  });
+  return Math.round((a+b)/2);
+}
+/* 4. 식각 */
+async function playEtch(box){
+  const a=await askQ(box,{q:'수십 nm 폭의 <b>미세 패턴을 수직으로</b> 깎아야 합니다. 어떤 식각을 선택할까요?',
+    opts:['습식 식각 — 화학 용액에 담근다','건식(플라즈마) 식각 — 이온으로 수직으로 때린다'],a:1,
+    ex:'습식은 모든 방향으로 깎여(등방성) 패턴 옆이 파입니다. 미세 패턴은 <b>이방성</b>이 가능한 <b>건식 식각</b>이 필수입니다.'});
+  const b=await timingGame(box,{inst:'플라즈마 식각 진행 중. 감광액 아래 절연막을 정확히 <b>200nm</b>만 깎으세요. 더 깎으면 아래 실리콘이 손상됩니다(과식각 페널티)!',
+    target:200,max:280,unit:'nm',pen:1.6,overPen:15,btn:'⏹ 식각 종료',
+    fn:t=>t*48,
+    draw:(ctx,v,cv)=>{drawSection(ctx,cv,[{h:70,c:'#3b4c7a',t:'Si 기판'},{h:100,c:'#6fd3ff',t:'절연막 200nm'},{h:20,c:'#ff4fd8',t:''}],'⚡ 플라즈마 식각');
+      // trench
+      const d=Math.min(v,200)/2;ctx.fillStyle='#0a1022';ctx.fillRect(150,cv.height-190,60,20+d);
+      if(v>200){ctx.fillStyle='#ff5c6c';ctx.fillRect(150,cv.height-70,60,(v-200)/2);ctx.fillStyle='#ff5c6c';ctx.font='bold 12px sans-serif';ctx.fillText('⚠ 기판 손상!',225,cv.height-60);}
+      ctx.fillStyle='#ff4fd8';ctx.font='11px sans-serif';ctx.fillText('감광액(PR)',44,cv.height-178);},
+    fb:(v,t)=>v>t+8?'과식각! 아래층 실리콘이 깎여 소자 특성이 무너졌습니다.':v<t-8?'식각 부족! 절연막이 남아 배선이 연결되지 않습니다.':'식각 종점을 정확히 잡았습니다.'});
+  return Math.round((a+b)/2);
+}
+/* 5. 박막·이온주입 */
+async function playFilm(box){
+  const a=await matchGame(box,{inst:'각 막에 가장 알맞은 증착 방식을 고르세요.',methods:['CVD','PVD','ALD'],
+    items:[{q:'① 배선 사이를 채우는 두꺼운 절연막 (범용·빠름)',a:0},
+           {q:'② 알루미늄·티타늄 등 금속 박막',a:1},
+           {q:'③ 원자 몇 층 두께의 초균일 고유전(High-k) 게이트 막',a:2}],
+    ex:'<b>CVD</b> = 화학 반응으로 두꺼운 막 / <b>PVD(스퍼터링)</b> = 금속 타깃을 물리적으로 때려 금속막 / <b>ALD</b> = 원자층 단위 극박·초균일 막.'});
+  const b=await askQ(box,{q:'실리콘에 이온을 주입해 <b>N형 반도체</b>를 만들려면 어떤 원소를 넣어야 할까요?',
+    opts:['붕소 (B, 3족)','인 (P, 5족)','탄소 (C, 4족)'],a:1,
+    ex:'실리콘(4족)보다 전자가 하나 많은 <b>5족(인·비소) → N형</b>, 하나 적은 <b>3족(붕소) → P형</b>입니다.'});
+  const c=await timingGame(box,{inst:'이온주입기 가동 중. 목표 주입량(Dose) <b>50</b>에서 빔을 멈추세요. 부족하면 저항이 높고, 과하면 결정이 손상됩니다.',
+    target:50,max:80,unit:'',pen:3,btn:'⏹ 빔 차단',
+    fn:t=>t*14,
+    draw:(ctx,v,cv)=>{drawSection(ctx,cv,[{h:110,c:'#3b4c7a',t:'Si 웨이퍼'}],'🧪 이온주입기 (P⁺ 빔)');
+      ctx.fillStyle='rgba(74,224,138,'+Math.min(v/50,1)*.8+')';ctx.fillRect(40,cv.height-110,cv.width-80,30);
+      for(let i=0;i<12;i++){ctx.fillStyle='#4ae08a';ctx.fillRect(48+i*23+(performance.now()/20+i*13)%8,40+(performance.now()/6+i*29)%40,2,10);}
+      ctx.fillStyle='#4ae08a';ctx.font='bold 12px sans-serif';ctx.fillText('Dose '+v.toFixed(0),cv.width-90,cv.height-120);},
+    fb:(v,t)=>Math.abs(v-t)<6?'정확한 주입량. 원하는 전기 특성이 나옵니다.':v>t?'과주입! 격자 손상이 커 열처리로도 회복이 어렵습니다.':'주입 부족! 도핑 농도가 낮아 저항이 높습니다.'});
+  return Math.round((a+b+c)/3);
+}
+/* 6. 금속 배선 */
+async function playMetal(box){
+  const a=await askQ(box,{q:'현대 미세공정에서 배선 금속으로 <b>구리(Cu)</b>를 쓰는 이유는?',
+    opts:['알루미늄보다 저항이 낮고 신뢰성(EM 내성)이 좋아서','식각이 쉬워 공정이 단순해서','가격이 가장 싸서'],a:0,
+    ex:'구리는 저항이 낮아 신호가 빠르지만 <b>식각이 어려워</b> 홈을 먼저 파고 구리를 채우는 <b>다마신</b> 공법을 씁니다.'});
+  const b=await askQ(box,{q:'구리를 채운 뒤 표면을 평탄하게 갈아내는 공정의 이름은?',
+    opts:['CMP (화학적·기계적 연마)','CVD (화학기상증착)','EDS (전기적 다이 선별)'],a:0,
+    ex:'<b>CMP</b>는 슬러리와 패드로 표면을 갈아 다음 층을 쌓을 수 있게 평탄화합니다.'});
+  const c=await timingGame(box,{inst:'CMP 연마 중! 홈 위로 넘친 구리를 갈아내 표면이 <b>딱 평탄(100)</b>해지는 순간 멈추세요. 더 갈면 배선이 패이는 <b>디싱</b>이 생깁니다.',
+    target:100,max:140,unit:'%',pen:2.5,overPen:10,btn:'⏹ 연마 정지',
+    fn:t=>t*30,
+    draw:(ctx,v,cv)=>{const over=Math.max(0,100-v)*0.5,dish=Math.max(0,v-100)*0.5;
+      drawSection(ctx,cv,[{h:60,c:'#3b4c7a',t:'하부층'},{h:70,c:'#6fd3ff',t:'절연막(Low-k)'}],'🔗 CMP 평탄화');
+      ctx.fillStyle='#e6a04a';[80,180,280].forEach(x=>{ctx.fillRect(x-20,cv.height-130+dish,40,70-dish);});
+      if(over>0){ctx.fillStyle='#e6a04a';ctx.fillRect(40,cv.height-130-over,cv.width-80,over);}
+      ctx.fillStyle='#e8eefc';ctx.font='11px sans-serif';ctx.fillText(over>0?'넘친 구리(단락 위험)':dish>0?'디싱 발생!':'평탄 ✔',44,cv.height-140-over);},
+    fb:(v,t)=>v>t+6?'과연마(디싱)! 배선 두께가 얇아져 저항이 올라갑니다.':v<t-6?'연마 부족! 남은 구리가 배선들을 단락시킵니다.':'완벽한 평탄화. 다음 층을 올릴 준비 완료.'});
+  return Math.round((a+b+c)/3);
+}
+/* 7. EDS */
+function playEDS(box){
+  return new Promise(res=>{
+    box.innerHTML=`<div class="inst">🔍 프로브 카드가 신호를 보내면 <b>불량 다이는 순간 빨갛게 깜빡</b>입니다. 20초 안에 불량 다이를 모두 찾아 <b>탭</b>해 잉크 마킹하세요. 양품을 잘못 찍으면 감점!</div>
+      <canvas id="ed" width="360" height="360"></canvas><div class="row"><div class="tip" id="edinfo">불량 0/8 · 오마킹 0</div></div>`;
+    const cv=$('ed'),ctx=cv.getContext('2d');
+    const N=9,S=34,OX=27,OY=27,dies=[];
+    for(let r=0;r<N;r++)for(let c=0;c<N;c++){const cx=OX+c*S+S/2,cy=OY+r*S+S/2;if(Math.hypot(cx-180,cy-180)<160)dies.push({r,c,cx,cy,bad:false,mark:false});}
+    const badN=8;let picked=0;while(picked<badN){const d=dies[Math.floor(Math.random()*dies.length)];if(!d.bad){d.bad=true;picked++;}}
+    let found=0,wrong=0,t0=performance.now(),DUR=20,done=false;
+    function draw(now){
+      ctx.clearRect(0,0,360,360);ctx.fillStyle='#0a1022';ctx.fillRect(0,0,360,360);
+      ctx.fillStyle='#1c2a4a';ctx.beginPath();ctx.arc(180,180,168,0,7);ctx.fill();
+      const blink=((now/1300)%1)<0.12;
+      dies.forEach(d=>{
+        let col='#2e8b57';
+        if(d.mark)col=d.bad?'#ffd54a':'#7a1f2b';
+        else if(d.bad&&blink)col='#ff3b3b';
+        ctx.fillStyle=col;ctx.fillRect(d.cx-S/2+2,d.cy-S/2+2,S-4,S-4);
+        if(d.mark){ctx.fillStyle='#000';ctx.font='bold 16px sans-serif';ctx.fillText(d.bad?'✔':'✕',d.cx-7,d.cy+6);}
+      });
+      const el=(now-t0)/1000;$('g-timer').textContent='⏱ '+Math.max(0,DUR-el).toFixed(1)+'s';
+      ctx.fillStyle='#8a97b8';ctx.font='11px sans-serif';ctx.fillText('양품 다이',10,350);ctx.fillStyle='#2e8b57';ctx.fillRect(60,341,12,12);
+      return el;
+    }
+    cv.addEventListener('pointerdown',e=>{
+      if(done)return;const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*360/r.width,y=(e.clientY-r.top)*360/r.height;
+      const d=dies.find(d=>Math.abs(d.cx-x)<S/2&&Math.abs(d.cy-y)<S/2);if(!d||d.mark)return;
+      d.mark=true;if(d.bad)found++;else wrong++;
+      $('edinfo').textContent=`불량 ${found}/${badN} · 오마킹 ${wrong}`;
+      if(found===badN)finish();
+    });
+    function finish(){
+      done=true;$('g-timer').textContent='';
+      const sc=Math.round(clamp(found/badN*100-wrong*12,0,100));
+      const t=document.createElement('div');t.className='tip';t.innerHTML=`불량 검출 ${found}/${badN}, 양품 오마킹 ${wrong}개 → ${sc}점<br>${found<badN?'놓친 불량 다이는 패키징까지 가서 비용을 낭비합니다.':''} ${wrong>0?'양품을 불량 처리하면 수율이 그만큼 떨어집니다.':''} ${sc>=90?'완벽한 선별!':''}`;
+      box.appendChild(t);const nb=document.createElement('button');nb.textContent='계속 →';nb.onclick=()=>res(sc);box.appendChild(nb);
+    }
+    function loop(now){if(done)return;const el=draw(now);if(el>=DUR){draw(now);finish();return;}requestAnimationFrame(loop);}
+    requestAnimationFrame(loop);
+  });
+}
+/* 8. 패키징 */
+function playPack(box){
+  return new Promise(res=>{
+    const steps=['백그라인딩','다이싱','다이 어태치','와이어 본딩','몰딩','최종 테스트'];
+    const desc=['웨이퍼 뒷면을 얇게 연마','웨이퍼를 칩 단위로 절단','칩을 기판(리드프레임)에 부착','금선으로 칩과 기판 연결','수지로 감싸 보호','전기·기능 최종 검사'];
+    const order=[...steps.keys()].sort(()=>Math.random()-.5);
+    box.innerHTML=`<div class="inst">📦 패키징 공정을 <b>올바른 순서대로</b> 탭하세요. 틀리면 칩이 깨집니다(-15점)!</div>
+      <div id="pkflow" class="flow"></div><div class="tiles" id="pk"></div>`;
+    let next=0,wrong=0;
+    order.forEach(i=>{const t=document.createElement('div');t.className='tile';t.innerHTML=steps[i]+'<div style="font-size:11px;font-weight:400;color:var(--dim);margin-top:3px">'+desc[i]+'</div>';
+      t.onclick=()=>{if(t.classList.contains('picked'))return;
+        if(i===next){t.classList.add('picked');t.innerHTML=(next+1)+'. '+steps[i];next++;const s=document.createElement('span');s.textContent=steps[i];s.style.color='var(--grn)';$('pkflow').appendChild(s);
+          if(next===steps.length){const sc=clamp(100-wrong*15,0,100);const tip=document.createElement('div');tip.className='tip';tip.innerHTML=`실수 ${wrong}회 → ${sc}점<br>올바른 순서: <b>${steps.join(' → ')}</b>`;box.appendChild(tip);const nb=document.createElement('button');nb.textContent='🎉 FAB OUT!';nb.onclick=()=>res(sc);box.appendChild(nb);}
+        }else{wrong++;t.classList.remove('shake');void t.offsetWidth;t.classList.add('shake');}
+      };$('pk').appendChild(t);});
+  });
+}
+
+/* ============ 진행 흐름 ============ */
+function startGame(){
+  nick=$('nick').value.trim()||'익명 엔지니어';cur=0;scores=[];showLearn();
+}
+function renderMap(el){
+  el.innerHTML=STAGES.map((s,i)=>`<div class="${i<cur?'done':i===cur?'cur':''}"><em>${s.icon}</em>${s.name}${i<cur?'<br>'+scores[i]+'점':''}</div>`).join('');
+}
+function avg(){return scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;}
+function showLearn(){
+  const s=STAGES[cur];
+  $('l-prog').textContent=`공정 ${cur+1} / 8`;$('l-yield').textContent=avg()===null?'-':avg()+'%';
+  renderMap($('l-map'));$('l-badge').textContent=`STEP ${cur+1} · ${s.en}`;$('l-title').textContent=s.icon+' '+s.name+' 공정';
+  $('l-desc').textContent=s.desc;$('l-list').innerHTML=s.learn.map(x=>`<li>${x}</li>`).join('');
+  show('s-learn');
+}
+async function beginPlay(){
+  const s=STAGES[cur];
+  $('g-prog').textContent=`공정 ${cur+1} / 8 · ${s.name}`;$('g-timer').textContent='';
+  $('g-badge').textContent=`STEP ${cur+1} · ${s.en}`;$('g-title').textContent=s.icon+' '+s.name;
+  $('g-box').innerHTML='';show('s-game');
+  const sc=await s.play($('g-box'));
+  scores[cur]=sc;showFeedback(sc);
+}
+function showFeedback(sc){
+  const s=STAGES[cur];
+  $('f-badge').textContent=`STEP ${cur+1} 완료`;$('f-title').textContent=s.icon+' '+s.name+' 공정 수율';
+  $('f-score').textContent=sc+'%';
+  const st=sc>=90?3:sc>=70?2:sc>=40?1:0;$('f-stars').textContent='★'.repeat(st)+'☆'.repeat(3-st);
+  $('f-msg').textContent=sc>=90?'교과서적인 공정 운전입니다!':sc>=70?'양호. 조금만 더 정밀하게!':sc>=40?'수율 손실 발생. 복습이 필요합니다.':'대량 불량! 학습 카드를 다시 읽어보세요.';
+  $('f-tip').innerHTML='💡 '+s.tip;
+  $('f-next').textContent=cur===7?'📊 최종 결과 보기':'다음 공정으로 →';
+  show('s-fb');
+}
+function nextStage(){cur++;if(cur<8)showLearn();else showResult();}
+function showResult(){
+  const y=avg();
+  const g=y>=90?'S':y>=80?'A':y>=65?'B':y>=50?'C':'D';
+  $('r-nick').textContent=nick;$('r-yield').textContent=y+'%';$('r-grade').textContent=g+' 등급';
+  $('r-msg').textContent={S:'전설의 수율 마스터! 당신의 FAB은 세계 1등입니다.',A:'우수 엔지니어. 양산 라인을 맡겨도 되겠습니다.',B:'합격점. 몇 개 공정만 보완하면 A입니다.',C:'수율 개선 TF 소집! 핵심 공정 재교육이 필요합니다.',D:'라인 정지… 8대 공정을 처음부터 다시 배워봅시다.'}[g];
+  $('r-stages').innerHTML=STAGES.map((s,i)=>`<div class="srow"><span>${s.icon} ${s.name}</span><div class="bar"><i style="width:${scores[i]}%"></i></div><span>${scores[i]}</span></div>`).join('');
+  const rv=STAGES.map((s,i)=>scores[i]<70?`<div class="tip"><b>${s.icon} ${s.name} (${scores[i]}점)</b><br>${s.tip}</div>`:'').join('');
+  $('r-review').innerHTML=rv||'<p style="color:var(--grn)">모든 공정 70점 이상! 복습할 공정이 없습니다. 👏</p>';
+  // ranking
+  let rank=[];try{rank=JSON.parse(localStorage.getItem('fab8_rank')||'[]');}catch(e){}
+  const me={n:nick,y,g,t:Date.now()};rank.push(me);rank.sort((a,b)=>b.y-a.y||a.t-b.t);rank=rank.slice(0,10);
+  try{localStorage.setItem('fab8_rank',JSON.stringify(rank));}catch(e){}
+  $('r-rank').innerHTML=rank.map((r,i)=>`<li class="${r.t===me.t?'me':''}"><span>${['🥇','🥈','🥉'][i]||(i+1)+'.'} ${r.n}</span><span>${r.g} · ${r.y}%</span></li>`).join('');
+  show('s-result');
+}
+</script>
+</body>
+</html>
